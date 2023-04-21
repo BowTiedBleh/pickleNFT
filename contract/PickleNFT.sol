@@ -19,6 +19,8 @@ contract PickleNFT is ERC721, AccessControl {
 
     mapping(uint256 => string) private _tokenURIs;
 
+    event TokenURISet(uint256 indexed tokenId, string uri);
+
     event NFTMinted(
         address indexed to,
         uint256 indexed tokenId,
@@ -43,6 +45,7 @@ contract PickleNFT is ERC721, AccessControl {
     ) internal virtual {
         require(_exists(tokenId), "PickleNFT: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
+        emit TokenURISet(tokenId, _tokenURI);
     }
 
     // Define a function called mint that takes an address, a uint256, and a string as arguments
@@ -68,6 +71,11 @@ contract PickleNFT is ERC721, AccessControl {
         emit NFTBurned(_tokenId);
     }
 
+    // Define a function called exists that takes a uint256 as an argument
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _exists(tokenId);
+    }
+
     // Override the ERC721 function called tokenURI to return the URI for a specific token ID
     function tokenURI(
         uint256 _tokenId
@@ -75,17 +83,24 @@ contract PickleNFT is ERC721, AccessControl {
         // Require that the token with the specified ID exists
         require(_exists(_tokenId), "URI query for nonexistent token");
 
-        // Get the base URI for the token
-        string memory baseURI = _baseURI();
-        // If the base URI is not empty, concatenate it with the token ID and return the result
-        return
-            bytes(baseURI).length > 0
-                ? string(abi.encodePacked(baseURI, _tokenId))
-                : "";
+        // Get the URI for the token
+        string memory uri = _tokenURIs[_tokenId];
+        // If the URI is not empty, return it
+        if (bytes(uri).length > 0) {
+            return uri;
+        } else {
+            // Get the base URI for the token
+            string memory baseURI = _baseURI();
+            // If the base URI is not empty, concatenate it with the token ID and return the result
+            return
+                bytes(baseURI).length > 0
+                    ? string(abi.encodePacked(baseURI, _tokenId))
+                    : "";
+        }
     }
 
     // Override the ERC721 function called _baseURI to return the base URI for the tokens
     function _baseURI() internal view virtual override returns (string memory) {
-        return "ipfs://<hash>"; // Set the base URI for the tokens
+        return "https://example.com/token/"; // Set the base URI for the tokens
     }
 }
